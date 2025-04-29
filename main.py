@@ -3,11 +3,15 @@ from typing import List, Optional
 from database import get_db_connection
 from models import Beneficiary
 from datetime import date
+from fastapi import Query
 
 app = FastAPI()
 
 @app.get("/beneficiaries", response_model=List[Beneficiary])
-def get_beneficiaries(skip: int = 0, limit: int = 10):
+def get_beneficiaries(
+    skip: int = Query(default=0, ge=0),
+    limit: int = Query(default=100, gt=0, le=1000)
+):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute(
@@ -21,11 +25,12 @@ def get_beneficiaries(skip: int = 0, limit: int = 10):
     )
     rows = cursor.fetchall()
     conn.close()
+
     if not rows:
         raise HTTPException(status_code=404, detail="No beneficiaries found")
+
     beneficiaries = []
     for row in rows:
-        # Asumiendo que birth_date es un date, no un string
         age = None
         if row[4]:  # birth_date
             today = date.today()
@@ -33,12 +38,11 @@ def get_beneficiaries(skip: int = 0, limit: int = 10):
 
         beneficiaries.append(Beneficiary(
             id=row[0],
-            name=f"{row[1]} {row[2]}",  # Combinar first_name y last_name
+            name=f"{row[1]} {row[2]}",
             age=age,
             program=row[6]
         ))
     return beneficiaries
-
 
 @app.get("/beneficiaries/{beneficiary_id}", response_model=Beneficiary)
 def get_beneficiary(beneficiary_id: int):
@@ -92,7 +96,8 @@ def get_beneficiaries_by_program(program_name: str):
             id=row[0],
             name=f"{row[1]} {row[2]}",  # Combinar first_name y last_name
             age=age,
-            program=row[6]
+           program=row[6]
         ))
+    print(beneficiaries)
 
     return beneficiaries
