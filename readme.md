@@ -101,7 +101,7 @@ numpy
 
 
 📁 Estructura del proyecto
-
+```text
 .
 ├── main.py                 ← Entrypoint de la API
 ├── database.py             ← Conexión a PostgreSQL
@@ -111,7 +111,7 @@ numpy
 ├── beneficiaries_mock_updated.csv
 ├── create_table.sql
 └── README.md
-
+```
 
 🧪 Comandos curl para probar la API
 
