@@ -75,10 +75,14 @@ def get_beneficiaries(request: Request,
             age = today.year - row[4].year - ((today.month, today.day) < (row[4].month, row[4].day))
 
         beneficiaries.append(Beneficiary(
-            id=row[0],
-            name=f"{row[1]} {row[2]}",
+          id=row[0],
+            name=f"{row[1]} {row[2]}",  # Combinar first_name y last_name
             age=age,
-            program=row[6]
+            gender=row[3],
+            birth_date=str(row[4]),
+            rut_number=str(row[5]),
+            program=row[6],
+            process_date=str(row[7])
         ))
     return beneficiaries
 
@@ -106,12 +110,16 @@ def get_beneficiary(request: Request,beneficiary_id: int):
     if row[4]:  # birth_date
         today = date.today()
         age = today.year - row[4].year - ((today.month, today.day) < (row[4].month, row[4].day))
-    
+
     return Beneficiary(
-        id=row[0],
-        name=f"{row[1]} {row[2]}",  # Combina first_name + last_name
-        age=age,
-        program=row[6]
+          id=row[0],
+            name=f"{row[1]} {row[2]}",  # Combinar first_name y last_name
+            age=age,
+            gender=row[3],
+            birth_date=str(row[4]),
+            rut_number=str(row[5]),
+            program=row[6],
+            process_date=str(row[7])
     )
 
 
@@ -142,10 +150,14 @@ def get_beneficiaries_by_program(request: Request,program_name: str):
             age = today.year - row[4].year - ((today.month, today.day) < (row[4].month, row[4].day))
 
         beneficiaries.append(Beneficiary(
-            id=row[0],
+          id=row[0],
             name=f"{row[1]} {row[2]}",  # Combinar first_name y last_name
             age=age,
-           program=row[6]
+            gender=row[3],
+            birth_date=str(row[4]),
+            rut_number=str(row[5]),
+            program=row[6],
+            process_date=str(row[7])
         ))
  
     return beneficiaries
