@@ -64,14 +64,14 @@ Para proteger el servicio contra abuso, los endpoints están limitados a 10 soli
   pip install -r requirements.txt
   ````
   Crear un archivo .env con las siguientes variables:
-
+```text
 DB_SERVER=
 DB_PORT=
 DB_DATABASE=
 DB_USERNAME=
 DB_PASSWORD=
 API_KEY=
-
+```
 
 carga de datos en servidor psql 
 
