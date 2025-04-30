@@ -43,7 +43,7 @@ app.add_middleware(SlowAPIMiddleware)
 #llamada : curl -H "X-API-Key: [API_KEY]" "http://localhost:8000/beneficiaries?skip=0&limit=10"
 #por defaul toma los 100 primeros y pagina 0 si es que no se indica ( evita traer demasiada data )
 @app.get("/beneficiaries", response_model=List[Beneficiary])
-@limiter.limit("5/minute")
+@limiter.limit("10/minute")
 def get_beneficiaries(request: Request,
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=100, gt=0, le=1000),
@@ -86,7 +86,7 @@ def get_beneficiaries(request: Request,
 #llamada : curl -H "X-API-Key: [API_KEY]" "http://localhost:8000/beneficiaries/1"
 
 @app.get("/beneficiaries/{beneficiary_id}", response_model=Beneficiary)
-@limiter.limit("5/minute")
+@limiter.limit("10/minute")
 def get_beneficiary(request: Request,beneficiary_id: int):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -119,7 +119,7 @@ def get_beneficiary(request: Request,beneficiary_id: int):
 #llamada : curl -H "X-API-Key: [API_KEY]" "http://localhost:8000/beneficiaries/program/P3"
 
 @app.get("/beneficiaries/program/{program_name}", response_model=List[Beneficiary])
-@limiter.limit("5/minute")
+@limiter.limit("10/minute")
 def get_beneficiaries_by_program(request: Request,program_name: str):
     conn = get_db_connection()
     cursor = conn.cursor()
