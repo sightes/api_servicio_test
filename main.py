@@ -1,6 +1,6 @@
 #lectura de librerias carga 
 
-from fastapi import FastAPI, HTTPException, Query, Depends, Header,status
+from fastapi import FastAPI, HTTPException, Query, Depends, Header,status,Request
 from typing import List, Optional
 from database import get_db_connection
 from models import Beneficiary
@@ -27,11 +27,11 @@ def verify_api_key(x_api_key: str = Header(...)):
             detail="Falta apikey o es incorrecta",
         )
 
-limiter = Limiter(key_func=get_remote_address)
+
 
 #app fastapi con checkeo de apikey
 app = FastAPI(dependencies=[Depends(verify_api_key)])
-
+limiter = Limiter(key_func=get_remote_address)
 #elementos de seguridad para evitar sobre llamada
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -42,11 +42,12 @@ app.add_middleware(SlowAPIMiddleware)
 # aqui endpoint infformacion por beneficiario
 #llamada : curl -H "X-API-Key: [API_KEY]" "http://localhost:8000/beneficiaries?skip=0&limit=10"
 #por defaul toma los 100 primeros y pagina 0 si es que no se indica ( evita traer demasiada data )
-
 @app.get("/beneficiaries", response_model=List[Beneficiary])
-def get_beneficiaries(
+@limiter.limit("5/minute")
+def get_beneficiaries(request: Request,
     skip: int = Query(default=0, ge=0),
-    limit: int = Query(default=100, gt=0, le=1000)
+    limit: int = Query(default=100, gt=0, le=1000),
+    
 ):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -85,7 +86,8 @@ def get_beneficiaries(
 #llamada : curl -H "X-API-Key: [API_KEY]" "http://localhost:8000/beneficiaries/1"
 
 @app.get("/beneficiaries/{beneficiary_id}", response_model=Beneficiary)
-def get_beneficiary(beneficiary_id: int):
+@limiter.limit("5/minute")
+def get_beneficiary(request: Request,beneficiary_id: int):
     conn = get_db_connection()
     cursor = conn.cursor()
     #conexion a db 
@@ -117,7 +119,8 @@ def get_beneficiary(beneficiary_id: int):
 #llamada : curl -H "X-API-Key: [API_KEY]" "http://localhost:8000/beneficiaries/program/P3"
 
 @app.get("/beneficiaries/program/{program_name}", response_model=List[Beneficiary])
-def get_beneficiaries_by_program(program_name: str):
+@limiter.limit("5/minute")
+def get_beneficiaries_by_program(request: Request,program_name: str):
     conn = get_db_connection()
     cursor = conn.cursor()
     #conexion a db 
