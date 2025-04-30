@@ -41,18 +41,6 @@ curl -H "X-API-Key: [API_KEY]" "http://localhost:8000/beneficiaries/1"
 ```
 ---
 
-📄 GET /beneficiaries/{id}
-
-Devuelve un beneficiario específico por su ID.
-
-✅ Ejemplo curl:
-
-```curl
-curl -H "X-API-Key: [API_KEY]" "http://localhost:8000/beneficiaries/1"
-```
-
----
-
 📄 GET /beneficiaries/program/{program_name}
 
 Filtra beneficiarios por el nombre del programa al que pertenecen.
@@ -124,51 +112,6 @@ numpy
 ├── create_table.sql
 └── README.md
 
-
-⚙️ Consideraciones de rendimiento, escalabilidad y eficiencia
-	
-  •	Rendimiento: la API fue desarrollada con FastAPI, un framework asincrónico que utiliza uvicorn como servidor ASGI, permitiendo tiempos de respuesta muy bajos y alta concurrencia. El acceso a datos se realiza mediante consultas SQL eficientes usando LIMIT y OFFSET, lo que facilita la paginación sin sobrecargar el servidor.
-
-  •	Escalabilidad: la arquitectura es fácilmente escalable horizontalmente, permitiendo múltiples instancias detrás de un balanceador de carga. La conexión a la base de datos puede migrarse a servicios gestionados (como Cloud SQL o RDS) para separar preocupaciones.
-	
-  •	Eficiencia: se integró rate limiting con slowapi para mitigar abusos y bots, y compresión GZIP para reducir el tamaño de las respuestas. Además, la paginación evita el envío de grandes volúmenes de datos innecesarios.
-
-💡 Reflexión: tecnologías modernas que podrían aportar valor
-	
-  •	GraphQL: permitiría a los clientes consumir solo los campos requeridos, optimizando tráfico y flexibilidad, especialmente útil para aplicaciones móviles o de frontend dinámico.
-
-	•	Caching distribuido (Redis o CDN Edge Cache): para endpoints de alta demanda como /beneficiaries, aplicar cache por programa o por ID podría reducir significativamente la carga en la base de datos.
-
-	•	Serverless (Cloud Run, AWS Lambda): permitiría una arquitectura autoscalable y de bajo costo para cargas variables, ideal para APIs eventuales o bajo demanda.
-
-	•	Docker + CI/CD (GitHub Actions + Vercel/Render): para automatizar despliegues y facilitar entornos reproducibles con infraestructura como código.  
-
-
-🚀 Despliegue Experimental
-
-El script de esta API fue desplegado de forma experimental en una máquina virtual (VPS) hospedada en BlueHosting, corriendo Ubuntu 22.04 LTS, equipada con 1 CPU virtual y 2 GB de RAM.
-Dentro de esta misma instancia corre un servidor de base de datos PostgreSQL 17 en modo local, al cual la API accede directamente mediante conexión interna.
-La API desarrollada en FastAPI expone sus servicios al exterior a través del puerto 8000, utilizando un nombre de dominio personalizado (sght.cl) gestionado gratuitamente mediante Cloudflare, lo que permite acceso público y seguro sin necesidad de exponer directamente la IP del servidor.
-
-```text
-
-                    Internet
-                        │
-                ┌──────▼──────┐
-                │  Cloudflare │
-                │ (DNS Proxy) │
-                └──────┬──────┘
-                       │
-          sght.cl → 45.7.xxx.xxx:8000
-                       │
-        ┌──────────────▼──────────────┐
-        │ VPS (BlueHosting - Ubuntu) │
-        │  CPU: 1 vCore / RAM: 2 GB   │
-        │  - FastAPI app (puerto 8000)│
-        │  - PostgreSQL 17 (localhost)│
-        └─────────────────────────────┘
-
-```
 
 🧪 Comandos curl para probar la API
 
