@@ -1,5 +1,5 @@
 CREATE TABLE beneficiaries (
-    id INT IDENTITY(1,1) PRIMARY KEY,
+    id serial PRIMARY KEY,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
     gender CHAR(1) NOT NULL,

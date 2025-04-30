@@ -1,11 +1,47 @@
-from fastapi import FastAPI, HTTPException
+#lectura de librerias carga 
+
+from fastapi import FastAPI, HTTPException, Query, Depends, Header,status
 from typing import List, Optional
 from database import get_db_connection
 from models import Beneficiary
 from datetime import date
-from fastapi import Query
+import os
+from dotenv import load_dotenv
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from slowapi.util import get_remote_address
+from fastapi.middleware.gzip import GZipMiddleware
 
-app = FastAPI()
+
+
+
+load_dotenv()
+API_KEY = os.getenv("API_KEY")
+
+#funcion que verifica que la apikey exista , verifica informacion en .env local esto puede ser trasladado a una variable de entorno en plataforma cloud
+def verify_api_key(x_api_key: str = Header(...)):
+    if x_api_key != API_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Falta apikey o es incorrecta",
+        )
+
+limiter = Limiter(key_func=get_remote_address)
+
+#app fastapi con checkeo de apikey
+app = FastAPI(dependencies=[Depends(verify_api_key)])
+
+#elementos de seguridad para evitar sobre llamada
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
+
+
+
+# aqui endpoint infformacion por beneficiario
+#llamada : curl -H "X-API-Key: [API_KEY]" "http://localhost:8000/beneficiaries?skip=0&limit=10"
+#por defaul toma los 100 primeros y pagina 0 si es que no se indica ( evita traer demasiada data )
 
 @app.get("/beneficiaries", response_model=List[Beneficiary])
 def get_beneficiaries(
@@ -14,6 +50,7 @@ def get_beneficiaries(
 ):
     conn = get_db_connection()
     cursor = conn.cursor()
+    #conexion a db 
     cursor.execute(
         """
         SELECT id, first_name, last_name, gender, birth_date, rut_number, program, process_date
@@ -27,7 +64,7 @@ def get_beneficiaries(
     conn.close()
 
     if not rows:
-        raise HTTPException(status_code=404, detail="No beneficiaries found")
+        raise HTTPException(status_code=404, detail="no se encuentra informacion")
 
     beneficiaries = []
     for row in rows:
@@ -44,10 +81,14 @@ def get_beneficiaries(
         ))
     return beneficiaries
 
+# aqui endpoint infformacion por beneficiario
+#llamada : curl -H "X-API-Key: [API_KEY]" "http://localhost:8000/beneficiaries/1"
+
 @app.get("/beneficiaries/{beneficiary_id}", response_model=Beneficiary)
 def get_beneficiary(beneficiary_id: int):
     conn = get_db_connection()
     cursor = conn.cursor()
+    #conexion a db 
     cursor.execute(
         "SELECT id, first_name, last_name, gender, birth_date, rut_number, program, process_date FROM beneficiaries WHERE id = %s",
         (beneficiary_id,)  # <-- pasa como tupla
@@ -56,7 +97,7 @@ def get_beneficiary(beneficiary_id: int):
     conn.close()
 
     if not row:
-        raise HTTPException(status_code=404, detail="Beneficiary not found")
+        raise HTTPException(status_code=404, detail="No existe Beneficiario con ese id")
     
     # Calcula edad si birth_date existe
     age = None
@@ -71,10 +112,15 @@ def get_beneficiary(beneficiary_id: int):
         program=row[6]
     )
 
+
+# aqui endpoint infformacion por beneficiario
+#llamada : curl -H "X-API-Key: [API_KEY]" "http://localhost:8000/beneficiaries/program/P3"
+
 @app.get("/beneficiaries/program/{program_name}", response_model=List[Beneficiary])
 def get_beneficiaries_by_program(program_name: str):
     conn = get_db_connection()
     cursor = conn.cursor()
+    #conexion a db 
     cursor.execute(
     "SELECT id, first_name, last_name, gender, birth_date, rut_number, program, process_date FROM beneficiaries WHERE program = %s",
     (program_name,)
@@ -83,7 +129,7 @@ def get_beneficiaries_by_program(program_name: str):
     conn.close()
 
     if not rows:
-        raise HTTPException(status_code=404, detail="No beneficiaries found for this program")
+        raise HTTPException(status_code=404, detail="No se enuentran beneficiarios en este programa")
     
     beneficiaries = []
     for row in rows:
@@ -98,6 +144,5 @@ def get_beneficiaries_by_program(program_name: str):
             age=age,
            program=row[6]
         ))
-    print(beneficiaries)
-
+ 
     return beneficiaries
